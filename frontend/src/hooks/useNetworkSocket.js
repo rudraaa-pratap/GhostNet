@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const HISTORY_LEN = 900 // ~22min of samples at 1.5s (backend keeps 30min)
 const EVENTS_LEN = 6000
@@ -25,8 +25,9 @@ function eventFromConnection(type, msg) {
 /**
  * Live GhostNet state over WebSocket.
  *
- * Events: snapshot | conn_open | conn_close | conn_update | stats | dns | bandwidth
+ * Events: snapshot | conn_open | conn_close | conn_update | stats | dns | bandwidth | alert
  * Timeline history is hydrated once from GET /api/timeline, then appended live.
+ * Alerts are hydrated from GET /api/alerts, then appended as they fire.
  */
 export function useNetworkSocket() {
   const [connections, setConnections] = useState(() => new Map())
@@ -34,12 +35,28 @@ export function useNetworkSocket() {
   const [status, setStatus] = useState(null)
   const [history, setHistory] = useState([])
   const [events, setEvents] = useState([])
+  const [alerts, setAlerts] = useState([])
   const [bandwidth, setBandwidth] = useState({ rates: {}, connections: {} })
   const [connected, setConnected] = useState(false)
   const [reconnectAttempt, setReconnectAttempt] = useState(0)
   const wsRef = useRef(null)
 
-  // hydrate timeline from SQLite history (last hour)
+  const mergeAlerts = useCallback((incoming) => {
+    if (!incoming?.length) return
+    setAlerts((prev) => {
+      const known = new Set(prev.map((a) => a.id))
+      const fresh = incoming.filter((a) => a.id != null && !known.has(a.id))
+      return fresh.length ? [...fresh, ...prev].slice(0, 50) : prev
+    })
+  }, [])
+
+  const dismissAlert = useCallback((id) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id))
+  }, [])
+
+  const dismissAllAlerts = useCallback(() => setAlerts([]), [])
+
+  // hydrate timeline from SQLite history (last hour) + persisted alerts
   useEffect(() => {
     let cancelled = false
     fetch('/api/timeline?limit=5000')
@@ -49,10 +66,18 @@ export function useNetworkSocket() {
         setEvents(data.events.map((e) => ({ ...e, conn_id: null })).slice(-EVENTS_LEN))
       })
       .catch(() => {})
+
+    fetch('/api/alerts?limit=50')
+      .then((r) => (r.ok ? r.json() : { alerts: [] }))
+      .then((data) => {
+        if (!cancelled) mergeAlerts(data.alerts)
+      })
+      .catch(() => {})
+
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [mergeAlerts])
 
   useEffect(() => {
     let cancelled = false
@@ -138,6 +163,9 @@ export function useNetworkSocket() {
           case 'bandwidth':
             applyRates(msg)
             break
+          case 'alert':
+            mergeAlerts(msg.alerts)
+            break
           case 'dns':
             setConnections((prev) => {
               let changed = false
@@ -180,7 +208,7 @@ export function useNetworkSocket() {
       clearTimeout(retryTimer)
       wsRef.current?.close()
     }
-  }, [])
+  }, [mergeAlerts])
 
   const connectionList = useMemo(() => [...connections.values()], [connections])
 
@@ -191,6 +219,9 @@ export function useNetworkSocket() {
     status,
     history,
     events,
+    alerts,
+    dismissAlert,
+    dismissAllAlerts,
     bandwidth,
     connected,
     reconnectAttempt,

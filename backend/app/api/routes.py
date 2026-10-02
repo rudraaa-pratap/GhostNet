@@ -1,4 +1,4 @@
-"""Read endpoints: connections, processes, stats, status, domains, timeline."""
+"""Read endpoints: connections, processes, stats, status, domains, timeline, report."""
 
 from __future__ import annotations
 
@@ -12,9 +12,41 @@ from ..services.aggregation import aggregate_domains
 
 router = APIRouter(prefix="/api", tags=["api"])
 
+_REPORT_WINDOW = 24 * 3600
+
 
 def _collector(request: Request):
     return request.app.state.collector
+
+
+def _process_rows(collector) -> list[dict]:
+    """Per-application rows with live per-PID bandwidth rolled up."""
+    rows = group_by_process(list(collector.connections.values()))
+    for row in rows:
+        rx = tx = 0.0
+        for pid in row["pids"]:
+            rate = collector.pid_rates.get(pid)
+            if rate:
+                rx += rate["rx"]
+                tx += rate["tx"]
+        row["rx_bps"] = round(rx, 1)
+        row["tx_bps"] = round(tx, 1)
+    return rows
+
+
+def _domain_rows(collector) -> list[dict]:
+    """Domain groups with live per-connection bandwidth rolled up."""
+    groups = aggregate_domains(list(collector.connections.values()))
+    for g in groups:
+        rx = tx = 0.0
+        for conn in collector.connections.values():
+            site = conn.registrable or conn.domain
+            if site == g["domain"] and (conn.rx_bps or conn.tx_bps):
+                rx += conn.rx_bps
+                tx += conn.tx_bps
+        g["rx_bps"] = round(rx, 1)
+        g["tx_bps"] = round(tx, 1)
+    return groups
 
 
 def _matches(
@@ -84,17 +116,7 @@ async def connections(
 
 @router.get("/processes")
 async def processes(request: Request) -> dict:
-    c = _collector(request)
-    rows = group_by_process(list(c.connections.values()))
-    for row in rows:
-        rx = tx = 0.0
-        for pid in row["pids"]:
-            rate = c.pid_rates.get(pid)
-            if rate:
-                rx += rate["rx"]
-                tx += rate["tx"]
-        row["rx_bps"] = round(rx, 1)
-        row["tx_bps"] = round(tx, 1)
+    rows = _process_rows(_collector(request))
     return {"processes": rows, "count": sum(r["connections"] for r in rows)}
 
 
@@ -111,17 +133,7 @@ async def stats(request: Request) -> dict:
 
 @router.get("/domains")
 async def domains(request: Request) -> dict:
-    c = _collector(request)
-    groups = aggregate_domains(list(c.connections.values()))
-    for g in groups:
-        rx = tx = 0.0
-        for conn in c.connections.values():
-            site = conn.registrable or conn.domain
-            if site == g["domain"] and (conn.rx_bps or conn.tx_bps):
-                rx += conn.rx_bps
-                tx += conn.tx_bps
-        g["rx_bps"] = round(rx, 1)
-        g["tx_bps"] = round(tx, 1)
+    groups = _domain_rows(_collector(request))
     return {"domains": groups, "count": len(groups)}
 
 
@@ -141,3 +153,56 @@ async def timeline(
         since = time.time() - 3600  # default: last hour
     events = store.query(since=since, until=until, limit=limit, kind=kind)
     return {"events": events, "count": len(events), "stored": store.count()}
+
+
+@router.get("/alerts")
+async def alerts(request: Request, limit: int = Query(default=100, le=1000)) -> dict:
+    """First-seen application → destination alerts (PDF §8 V3: "alerts")."""
+    c = _collector(request)
+    store = c.store
+    if store is None:
+        return {"alerts": c.alerts, "count": len(c.alerts), "total": len(c.alerts)}
+    rows = store.recent_alerts(limit)
+    return {"alerts": rows, "count": len(rows), "total": store.alert_count()}
+
+
+@router.get("/report")
+async def report(
+    request: Request,
+    window: int = Query(default=_REPORT_WINDOW, le=7 * 24 * 3600),
+) -> dict:
+    """Point-in-time snapshot used by the printable export (PDF §8 V3: "export")."""
+    c = _collector(request)
+    now = time.time()
+    store = c.store
+    events = store.query(since=now - window, limit=20000) if store is not None else []
+
+    opens = sum(1 for e in events if e["kind"] == "open")
+    closes = len(events) - opens
+    buckets: dict[int, dict] = {}
+    for e in events:
+        hour = int(e["ts"] // 3600)
+        b = buckets.setdefault(hour, {"hour": hour * 3600, "opens": 0, "closes": 0})
+        if e["kind"] == "open":
+            b["opens"] += 1
+        else:
+            b["closes"] += 1
+    hourly = sorted(buckets.values(), key=lambda b: b["hour"])
+
+    return {
+        "generated_at": now,
+        "window": window,
+        "status": c.status(),
+        "stats": dict(c.stats),
+        "processes": _process_rows(c),
+        "domains": _domain_rows(c),
+        "connections": [c2.to_dict() for c2 in c.connections.values()],
+        "timeline": {
+            "events": len(events),
+            "opens": opens,
+            "closes": closes,
+            "hourly": hourly,
+            "stored": store.count() if store is not None else 0,
+        },
+        "alerts": list(c.alerts),
+    }

@@ -16,6 +16,7 @@ from collections.abc import Awaitable, Callable
 import psutil
 
 from ..services.aggregation import categorize, registrable_domain
+from ..services.alerts import AlertWatcher
 from ..services.dns import DnsResolver
 from ..services.history import EventStore
 from .bandwidth import BandwidthSampler, demo_rates
@@ -46,6 +47,7 @@ class NetworkCollector:
         self.demo = demo
         self.store = store
         self.bandwidth = BandwidthSampler(enabled=sample_bandwidth and not demo)
+        self.alert_watcher = AlertWatcher(store)
 
         self.connections: dict[str, Connection] = {}
         self.started_at = time.time()
@@ -92,6 +94,11 @@ class NetworkCollector:
             },
         }
 
+    @property
+    def alerts(self) -> list[dict]:
+        """Recent first-seen application → destination alerts (newest first)."""
+        return self.alert_watcher.recent
+
     def status(self) -> dict:
         return {
             "source": self.source.name,
@@ -137,6 +144,10 @@ class NetworkCollector:
         self._refresh_stats(now)
         events.append({"type": "stats", "ts": now, "stats": dict(self.stats)})
         events.append({"type": "bandwidth", "ts": now, **await self._sample_bandwidth(now)})
+
+        fresh_alerts = self.alert_watcher.check(list(self.connections.values()))
+        if fresh_alerts:
+            events.append({"type": "alert", "ts": now, "alerts": fresh_alerts})
         return events
 
     @staticmethod

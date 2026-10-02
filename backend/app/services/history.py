@@ -31,6 +31,27 @@ CREATE TABLE IF NOT EXISTS events (
     opened_at REAL
 );
 CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);
+
+CREATE TABLE IF NOT EXISTS seen (
+    key TEXT PRIMARY KEY,
+    first_seen REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS alerts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts REAL NOT NULL,
+    process TEXT NOT NULL,
+    site TEXT NOT NULL,
+    category TEXT,
+    ip TEXT,
+    port INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_alerts_ts ON alerts(ts);
+
+CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
 """
 
 _COLUMNS = (
@@ -118,6 +139,73 @@ class EventStore:
         with self._lock, self._conn:
             cur = self._conn.execute("DELETE FROM events WHERE ts < ?", (cutoff,))
             return cur.rowcount
+
+    # ------------------------------------------------------------- alerts
+
+    def get_meta(self, key: str) -> str | None:
+        with self._lock:
+            row = self._conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
+        return None if row is None else row["value"]
+
+    def set_meta(self, key: str, value: str) -> None:
+        with self._lock, self._conn:
+            self._conn.execute(
+                "INSERT INTO meta (key, value) VALUES (?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (key, value),
+            )
+
+    def mark_seen(self, keys: list[str]) -> list[str]:
+        """Record keys as known; return only those that were unknown."""
+        if not keys:
+            return []
+        now = time.time()
+        fresh: list[str] = []
+        with self._lock, self._conn:
+            for key in keys:
+                cur = self._conn.execute(
+                    "INSERT OR IGNORE INTO seen (key, first_seen) VALUES (?, ?)",
+                    (key, now),
+                )
+                if cur.rowcount:
+                    fresh.append(key)
+        return fresh
+
+    def insert_alerts(self, rows: list[dict]) -> list[dict]:
+        """Persist alert rows, returning them with their generated ids."""
+        out: list[dict] = []
+        with self._lock, self._conn:
+            for row in rows:
+                ts = row.get("ts") or time.time()
+                cur = self._conn.execute(
+                    "INSERT INTO alerts (ts, process, site, category, ip, port) "
+                    "VALUES (?, ?, ?, ?, ?, ?)",
+                    (
+                        ts,
+                        row["process"],
+                        row["site"],
+                        row.get("category"),
+                        row.get("ip"),
+                        row.get("port"),
+                    ),
+                )
+                out.append({**row, "id": cur.lastrowid, "ts": ts})
+        return out
+
+    def recent_alerts(self, limit: int = 100) -> list[dict]:
+        """Newest-first alert history."""
+        limit = max(1, min(int(limit), 1000))
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, ts, process, site, category, ip, port FROM alerts "
+                "ORDER BY ts DESC, id DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def alert_count(self) -> int:
+        with self._lock:
+            return self._conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
 
     def close(self) -> None:
         with self._lock:
