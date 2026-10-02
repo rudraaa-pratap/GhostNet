@@ -37,8 +37,9 @@ const clock = (ts) =>
     second: '2-digit',
   })
 
-export default function Timeline({ events, windowMinutes, onWindowChange }) {
-  const now = useNow(1000)
+export default function Timeline({ events, windowMinutes, onWindowChange, referenceTime }) {
+  const liveNow = useNow(1000)
+  const now = Number.isFinite(referenceTime) ? referenceTime : liveNow
 
   const model = useMemo(() => {
     const start = now - windowMinutes * 60
