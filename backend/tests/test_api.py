@@ -101,6 +101,7 @@ def test_domains_endpoint(tmp_path):
             "Slack",
             "Developer",
             "CDN",
+            "Cloudflare",
             "Other",
             "Pending",
             "IP",
