@@ -245,13 +245,34 @@ Base URL: `http://127.0.0.1:8000`
 
 ## Getting Started
 
+### Data modes
+
+GhostNet has exactly two data modes. The choice is made **in the backend only** — both
+modes go through the same `ConnectionSource` → `NetworkCollector` → REST/WebSocket path,
+so the React app is identical either way and never generates connection data itself.
+
+| Mode | Selection | What it reads |
+| --- | --- | --- |
+| **real** (default) | unset, or `GHOSTNET_SOURCE=real` | actual sockets from the OS via psutil / lsof |
+| **demo** (explicit) | `GHOSTNET_SOURCE=demo` or `--demo` | synthetic traffic from `DemoSource` |
+
+```bash
+GHOSTNET_SOURCE=real uv run python -m app.main   # same as omitting it
+GHOSTNET_SOURCE=demo uv run python -m app.main   # same as passing --demo
+```
+
+`--demo` overrides the environment variable if both are set. An unrecognised
+`GHOSTNET_SOURCE` value logs a warning and stays on `real`, so a typo can never
+quietly switch you to fake data. The active mode is reported by `/api/status`
+(`"source"`, `"demo"`) and shown as a badge in the header.
+
 ### Backend
 
 ```bash
 cd backend
 uv sync
 uv run python -m app.main            # normal (own connections only)
-uv run python -m app.main --demo     # synthetic demo traffic
+GHOSTNET_SOURCE=demo uv run python -m app.main   # synthetic demo traffic
 sudo uv run python -m app.main       # full system-wide view (macOS)
 ```
 
