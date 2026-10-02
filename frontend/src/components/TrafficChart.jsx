@@ -91,7 +91,7 @@ export default function TrafficChart({ history, windowMinutes, onWindowChange })
             }}
             onMouseLeave={() => setHover(null)}
           >
-            <line x1="0" y1={HEIGHT / 2} x2={WIDTH} y2={HEIGHT / 2} stroke="#1b2636" strokeWidth="1" />
+            <line x1="0" y1={HEIGHT / 2} x2={WIDTH} y2={HEIGHT / 2} stroke="#1e3654" strokeWidth="1" />
             <path
               d={pathFor(down, xOf, yOf, true)}
               fill="#22d3ee"

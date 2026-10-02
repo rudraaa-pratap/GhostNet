@@ -1,9 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-ghost-bg: #070b12;
-  --color-ghost-panel: #0d1420;
-  --color-ghost-line: #1b2636;
+  --color-ghost-bg: #0a1628;
+  --color-ghost-panel: #0f2038;
+  --color-ghost-line: #1e3654;
   --color-ghost-accent: #22d3ee;
   --color-ghost-green: #34d399;
   --font-mono: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace;
@@ -69,7 +69,7 @@ body {
   height: 8px;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: #24344a;
+  background: #254066;
   border-radius: 4px;
 }
 .scroll-thin::-webkit-scrollbar-track {

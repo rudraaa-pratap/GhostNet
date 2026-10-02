@@ -95,7 +95,7 @@ export default function Timeline({ events, windowMinutes, onWindowChange, refere
               y1={HEIGHT - 0.5}
               x2={WIDTH}
               y2={HEIGHT - 0.5}
-              stroke="#1b2636"
+              stroke="#1e3654"
               strokeWidth="1"
             />
             {model.buckets.map((b, i) => {

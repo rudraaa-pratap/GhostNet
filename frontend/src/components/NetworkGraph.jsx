@@ -285,7 +285,7 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
       .attr('font-family', 'ui-monospace, SF Mono, monospace')
       .attr('fill', (d) => (d.kind === 'app' ? '#e2e8f0' : '#8fb3d0'))
       .attr('paint-order', 'stroke')
-      .attr('stroke', '#070b12')
+      .attr('stroke', '#0f2038')
       .attr('stroke-width', 3)
       .text((d) => truncate(d.label))
     nodeEnter.append('title').text(
