@@ -52,3 +52,19 @@ const CATEGORY_COLORS = {
 export function categoryColor(category) {
   return CATEGORY_COLORS[category] || appColor(category || 'Other')
 }
+
+const STATUS_COLORS = {
+  ESTABLISHED: '#34d399',
+  SYN_SENT: '#fbbf24',
+  SYN_RECEIVED: '#fbbf24',
+  FIN_WAIT1: '#fbbf24',
+  FIN_WAIT2: '#fbbf24',
+  TIME_WAIT: '#64748b',
+  LISTEN: '#38bdf8',
+  CLOSE_WAIT: '#fb7185',
+  LAST_ACK: '#fb7185',
+}
+
+export function statusColor(status) {
+  return STATUS_COLORS[status] || '#64748b'
+}
