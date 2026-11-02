@@ -18,10 +18,12 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .api.routes import router
 from .monitor.collector import NetworkCollector
@@ -57,6 +59,27 @@ def resolve_demo(cli_demo: bool = False) -> bool:
         return True
     log.warning("Ignoring %s=%r (expected %r or %r); using real", SOURCE_ENV, raw, _REAL, _DEMO)
     return False
+
+
+def allowed_origins() -> list[str]:
+    """Browser origins allowed to call the API (comma-separated env override).
+
+    Only matters when the dashboard is served from a different origin than
+    the backend (e.g. a deployed frontend); same-origin and the Vite dev
+    proxy need nothing, so dev defaults are just the Vite client itself.
+    """
+    raw = os.environ.get("GHOSTNET_ORIGINS", "").strip()
+    if not raw:
+        return ["http://localhost:5173", "http://127.0.0.1:5173"]
+    return [o.strip() for o in raw.split(",") if o.strip()]
+
+
+def frontend_dist_dir() -> Path:
+    """Where a built dashboard lives (``GHOSTNET_DIST`` or the default path)."""
+    custom = os.environ.get("GHOSTNET_DIST", "").strip()
+    if custom:
+        return Path(custom)
+    return Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 
 def create_app(
@@ -108,7 +131,7 @@ def create_app(
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_origins=allowed_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -133,6 +156,13 @@ def create_app(
     @app.get("/api/health")
     async def health() -> dict:
         return {"ok": True}
+
+    # Serve a built dashboard when it exists — one process runs everything
+    # (backend routes keep priority; this only catches the leftovers).
+    dist = frontend_dist_dir()
+    if (dist / "index.html").is_file():
+        app.mount("/", StaticFiles(directory=dist, html=True), name="frontend")
+        log.info("Serving dashboard from %s", dist)
 
     return app
 

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 const HISTORY_LEN = 900 // ~22min of samples at 1.5s (backend keeps 30min)
 const EVENTS_LEN = 6000
-const BASE_WS_URL = `ws://${window.location.host}/ws`
+const WS_SCHEME = window.location.protocol === 'https:' ? 'wss' : 'ws'
+const BASE_WS_URL = `${WS_SCHEME}://${window.location.host}/ws`
 
 function eventFromConnection(type, msg) {
   const c = msg.connection

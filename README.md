@@ -156,9 +156,6 @@ the UI never touches the OS.
 | Linting | Ruff (Python), Oxlint (JS) | Style and correctness checks |
 | Testing | pytest + pytest-asyncio, httpx TestClient | Unit + API/WebSocket integration tests |
 
-> `framer-motion` is listed in `package.json` but not yet used — animations are CSS
-> keyframes (`index.css`) plus D3 transitions.
-
 ---
 
 ## Project Structure
@@ -315,6 +312,20 @@ npm install
 npm run dev                          # http://localhost:5173 (proxies /api + /ws)
 ```
 
+### One-process run
+
+After `npm run build`, the backend serves the built dashboard itself — no Vite
+dev server needed:
+
+```bash
+cd frontend && npm run build
+cd ../backend && uv run python -m app.main   # dashboard at http://127.0.0.1:8000
+```
+
+`GHOSTNET_DIST` overrides where the build folder lives, and the API/WS routes
+keep priority over the static mount. No `frontend/dist` → the backend simply
+stays an API server, as before.
+
 ### Checks
 
 ```bash
@@ -334,6 +345,9 @@ cd frontend && npm run lint && npm run build
   a 60s warm-up window then absorbs startup churn, so restarting never re-alerts.
 - **Storage** — one SQLite file at `backend/data/ghostnet.db` (override with
   `GHOSTNET_DB`). Events prune after 24 hours; `seen` and `alerts` persist indefinitely.
+- **CORS** — dev defaults allow only the Vite client (`localhost:5173`). If the
+  dashboard is served from a different origin than the backend, set
+  `GHOSTNET_ORIGINS=https://dashboard.example.com` (comma-separated list).
 - **Replay fidelity** — history stores who talked to whom and when, not byte counts, so
   replay reconstructs the graph and counts but not per-connection rates.
 - **Export** — the report opens in a new tab and calls `window.print()`; choose
