@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import sys
 import threading
 import time
 from pathlib import Path
@@ -70,10 +71,25 @@ _COLUMNS = (
 )
 
 
+def _user_data_dir() -> Path:
+    """Per-user app data folder for the packaged app (no platformdirs dep)."""
+    if sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    elif sys.platform == "win32":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    else:
+        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+    return base / "GhostNet"
+
+
 def default_db_path() -> Path:
+    """DB location: GHOSTNET_DB wins, package stores in the OS data folder,
+    development keeps the file in the checkout (backend/data/)."""
     env = os.environ.get("GHOSTNET_DB")
     if env:
         return Path(env)
+    if getattr(sys, "frozen", False):
+        return _user_data_dir() / "ghostnet.db"
     return Path(__file__).resolve().parents[2] / "data" / "ghostnet.db"
 
 

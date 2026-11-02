@@ -17,6 +17,7 @@ import argparse
 import asyncio
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -75,10 +76,18 @@ def allowed_origins() -> list[str]:
 
 
 def frontend_dist_dir() -> Path:
-    """Where a built dashboard lives (``GHOSTNET_DIST`` or the default path)."""
+    """Where a built dashboard lives (``GHOSTNET_DIST`` wins).
+
+    Development wants the checkout's ``frontend/dist``; a PyInstaller bundle
+    carries the same folder as a data file next to the bootstrap modules.
+    """
     custom = os.environ.get("GHOSTNET_DIST", "").strip()
     if custom:
         return Path(custom)
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:  # onedir → _internal/, onefile → temp extraction dir
+            return Path(meipass) / "frontend_dist"
     return Path(__file__).resolve().parents[2] / "frontend" / "dist"
 
 

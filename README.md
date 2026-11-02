@@ -190,7 +190,8 @@ ghostnet/
 │   │   └── websocket/
 │   │       └── manager.py       # WebSocket connection registry + broadcast
 │   ├── data/ghostnet.db         # local DB (gitignored, override with GHOSTNET_DB)
-│   └── tests/                   # 55 tests: unit + API + WebSocket integration
+│   ├── packaging/               # PyInstaller bundle (spec + CLI launcher + build.sh)
+│   └── tests/                   # 86 tests: unit + API + WebSocket integration
 │
 └── frontend/
     ├── index.html
@@ -325,6 +326,23 @@ cd ../backend && uv run python -m app.main   # dashboard at http://127.0.0.1:800
 `GHOSTNET_DIST` overrides where the build folder lives, and the API/WS routes
 keep priority over the static mount. No `frontend/dist` → the backend simply
 stays an API server, as before.
+
+### Packaged binary
+
+`backend/packaging/ghostnet.spec` builds a self-contained app folder —
+interpreter, backend, uvicorn/psutil and the built dashboard bundled together
+(no Python or Node needed at run time):
+
+```bash
+backend/packaging/build.sh          # frontend build + uv sync + pyinstaller
+backend/dist/GhostNet/GhostNet      # dashboard at http://127.0.0.1:8000
+```
+
+The SQLite file moves to the per-user app-data folder for packaged builds
+(`~/Library/Application Support/GhostNet` on macOS, `%LOCALAPPDATA%\GhostNet`
+on Windows, `~/.local/share/GhostNet` on Linux); `GHOSTNET_DB` overrides it.
+A bundle always targets the OS it was built on — build once per platform,
+and `--demo` / `GHOSTNET_SOURCE` work exactly as in development.
 
 ### Checks
 
