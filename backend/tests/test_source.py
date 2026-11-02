@@ -6,7 +6,7 @@ Real mode must stay the default; demo mode must be requested explicitly.
 from fastapi.testclient import TestClient
 
 from app.main import SOURCE_ENV, create_app, resolve_demo
-from app.monitor.macos import detect_source
+from app.monitor.detect import detect_source
 
 
 def test_real_is_the_default(monkeypatch):

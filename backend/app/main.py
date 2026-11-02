@@ -26,7 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.routes import router
 from .monitor.collector import NetworkCollector
 from .monitor.demo import DemoSource
-from .monitor.macos import detect_source
+from .monitor.detect import detect_source
 from .services.dns import DnsResolver
 from .services.history import EventStore
 from .websocket.manager import ConnectionManager

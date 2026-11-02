@@ -55,8 +55,9 @@ Spotify ────────────────→  scdn.co
   activity, alerts) rendered in the browser and saved via *Print → Save as PDF*.
 - **Domain categories** — category chips with counts filter the domain panel.
 
-Planned: Linux/Windows sources behind the existing `ConnectionSource` interface,
-category rules expansion.
+**Cross-platform** — real traffic monitoring works on **macOS, Windows and Linux** behind
+the same `ConnectionSource` interface (see *Platforms* below); category rules expansion
+is still on the roadmap.
 
 ---
 
@@ -70,9 +71,12 @@ the UI never touches the OS.
                         ┌─────────────────────────────────────────────┐
                         │  COLLECTION          backend/app/monitor/  │
                         │                                             │
-   macOS kernel ───────►│  ConnectionSource (base.py)                 │
-   psutil / lsof        │    ├─ macos.py   elevated / unprivileged    │
-   nettop               │    └─ demo.py    synthetic traffic          │
+   OS socket tables ───►│  ConnectionSource (base.py)                 │
+   psutil / lsof        │    ├─ detect.py      sys.platform dispatch  │
+   nettop               │    ├─ psutil_source.py  shared impl         │
+                        │    ├─ macos.py   psutil / lsof fallback     │
+                        │    ├─ windows.py · linux.py                 │
+                        │    └─ demo.py    synthetic traffic          │
                         │              │  RawConnection               │
                         │              ▼                              │
                         │  NetworkCollector  poll → diff → enrich     │
@@ -141,7 +145,8 @@ the UI never touches the OS.
 | Layer | Technology | Purpose |
 | --- | --- | --- |
 | System monitoring | Python ≥ 3.11 + psutil | Processes, PIDs, sockets, global I/O counters |
-| macOS extras | `lsof`, `nettop` | Unprivileged socket enumeration; per-process bandwidth |
+| Socket enumeration | per-platform sources | macOS: psutil + `lsof` fallback · Windows/Linux: psutil |
+| macOS extras | `nettop` | Per-process/per-connection bandwidth (unprivileged) |
 | Backend | FastAPI + uvicorn | REST API and application server |
 | Real-time | WebSockets | Push live connection events to the browser |
 | Persistence | SQLite (stdlib) | 24h event history, alert baseline, alert log |
@@ -172,7 +177,11 @@ ghostnet/
 │   │   │   └── routes.py        # all REST endpoints
 │   │   ├── monitor/
 │   │   │   ├── base.py          # RawConnection / Connection / ConnectionSource
-│   │   │   ├── macos.py         # psutil (elevated) / lsof (unprivileged) + detect_source()
+│   │   │   ├── detect.py        # sys.platform dispatch to the right source module
+│   │   │   ├── psutil_source.py # shared PsutilSource + cross-platform elevation check
+│   │   │   ├── macos.py         # lsof fallback + darwin detect_source()
+│   │   │   ├── windows.py       # Windows detect_source() (Administrator = full view)
+│   │   │   ├── linux.py         # Linux detect_source() (sudo = full view)
 │   │   │   ├── bandwidth.py     # per-process & per-connection rates via nettop
 │   │   │   ├── demo.py          # synthetic traffic source
 │   │   │   └── collector.py     # poll → diff → enrich → persist → emit loop
@@ -266,6 +275,22 @@ GHOSTNET_SOURCE=demo uv run python -m app.main   # same as passing --demo
 quietly switch you to fake data. The active mode is reported by `/api/status`
 (`"source"`, `"demo"`) and shown as a badge in the header.
 
+### Platforms
+
+GhostNet auto-selects the OS socket source at startup (`app/monitor/detect.py`).
+Each platform implements the same `ConnectionSource` interface, so the rest of the
+app (collector, API, UI) never learns which OS it is running on.
+
+| Platform | Unprivileged (own connections) | Elevated (system-wide) |
+| --- | --- | --- |
+| macOS | `lsof` fallback if psutil is blocked | `sudo` |
+| Windows | psutil (other users' sockets hidden) | Run as Administrator |
+| Linux | psutil (own-user sockets) | `sudo` |
+
+Per-connection/per-process bandwidth uses macOS `nettop`; on Windows/Linux the
+collector keeps the platform-agnostic psutil global rates and reports
+`bandwidth: off` in `/api/status` until a native backend ships.
+
 ### Backend
 
 ```bash
@@ -273,7 +298,13 @@ cd backend
 uv sync
 uv run python -m app.main            # normal (own connections only)
 GHOSTNET_SOURCE=demo uv run python -m app.main   # synthetic demo traffic
-sudo uv run python -m app.main       # full system-wide view (macOS)
+```
+
+```bash
+# full system-wide view
+sudo uv run python -m app.main       # macOS / Linux
+# Windows (PowerShell, in an elevated shell)
+uv run python -m app.main
 ```
 
 ### Frontend
@@ -295,8 +326,10 @@ cd frontend && npm run lint && npm run build
 
 ## Notes
 
-- **macOS permissions:** without `sudo`, macOS only exposes the current user's sockets.
-  GhostNet detects this and shows a "limited view" banner in the UI.
+- **OS permissions:** without elevation every OS only exposes (part of) its socket
+  tables — macOS/Linux own-user sockets, Windows other users' sockets hidden. GhostNet
+  detects this and shows a "limited view" banner in the UI; run elevated for the full
+  system-wide view (`sudo` on macOS/Linux, Run as Administrator on Windows).
 - **Alerts baseline** — the first run records what's already connected without firing;
   a 60s warm-up window then absorbs startup churn, so restarting never re-alerts.
 - **Storage** — one SQLite file at `backend/data/ghostnet.db` (override with
