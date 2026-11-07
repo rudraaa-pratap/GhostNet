@@ -8,7 +8,22 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://127.0.0.1:8000',
-      '/ws': { target: 'ws://127.0.0.1:8000', ws: true },
+      '/ws': {
+        target: 'ws://127.0.0.1:8000',
+        ws: true,
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return
+            console.error('[vite] ws proxy error:', err)
+          })
+          proxy.on('proxySocket', (socket) => {
+            socket.on('error', (err) => {
+              if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return
+              console.error('[vite] ws proxy socket error:', err)
+            })
+          })
+        },
+      },
     },
   },
 })
