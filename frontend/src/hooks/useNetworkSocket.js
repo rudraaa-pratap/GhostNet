@@ -75,6 +75,16 @@ export function useNetworkSocket() {
       })
       .catch(() => {})
 
+    fetch('/api/stats')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data) {
+          if (data.history?.length) setHistory(data.history)
+          if (data.stats) setStats(data.stats)
+        }
+      })
+      .catch(() => {})
+
     return () => {
       cancelled = true
     }
@@ -131,6 +141,7 @@ export function useNetworkSocket() {
             setStats(msg.stats || {})
             setStatus(msg.status || null)
             if (msg.bandwidth) applyRates(msg.bandwidth)
+            if (msg.history?.length) setHistory(msg.history)
             break
           }
           case 'conn_open':
@@ -157,10 +168,17 @@ export function useNetworkSocket() {
               return next
             })
             break
-          case 'stats':
-            setStats(msg.stats || {})
-            setHistory((prev) => [...prev, msg.stats].slice(-HISTORY_LEN))
+          case 'stats': {
+            const s = msg.stats || {}
+            setStats(s)
+            const sample = {
+              t: msg.ts ?? Date.now() / 1000,
+              down: s.download_bps ?? s.down ?? 0,
+              up: s.upload_bps ?? s.up ?? 0,
+            }
+            setHistory((prev) => [...prev, sample].slice(-HISTORY_LEN))
             break
+          }
           case 'bandwidth':
             applyRates(msg)
             break

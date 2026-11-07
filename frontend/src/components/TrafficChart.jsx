@@ -39,9 +39,9 @@ export default function TrafficChart({ history, windowMinutes, onWindowChange })
   const { down, up, max, t0, t1 } = useMemo(() => {
     const t1 = now
     const t0 = t1 - windowMinutes * 60
-    const rows = history.filter((h) => h.t >= t0)
-    const down = rows.map((h) => ({ t: h.t, v: h.down }))
-    const up = rows.map((h) => ({ t: h.t, v: h.up }))
+    const rows = history.filter((h) => (h.t ?? h.ts) >= t0)
+    const down = rows.map((h) => ({ t: h.t ?? h.ts, v: h.down ?? h.download_bps ?? 0 }))
+    const up = rows.map((h) => ({ t: h.t ?? h.ts, v: h.up ?? h.upload_bps ?? 0 }))
     const max = Math.max(1, ...down.map((p) => p.v), ...up.map((p) => p.v))
     return { down, up, max, t0, t1 }
   }, [history, windowMinutes, now])

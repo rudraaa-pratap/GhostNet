@@ -166,8 +166,8 @@ export default function Dashboard() {
     }
   }, [replay, stats, filtered])
 
-  const downHistory = history.map((h) => h.down)
-  const upHistory = history.map((h) => h.up)
+  const downHistory = history.map((h) => h.down ?? h.download_bps ?? 0)
+  const upHistory = history.map((h) => h.up ?? h.upload_bps ?? 0)
 
   const tabButton = (id, label) => (
     <button
