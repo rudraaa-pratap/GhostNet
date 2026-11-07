@@ -21,8 +21,8 @@ function WindowButtons({ value, onChange }) {
           key={m}
           type="button"
           onClick={() => onChange(m)}
-          className={`rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-            value === m ? 'bg-ghost-accent/20 text-ghost-accent' : 'text-slate-500 hover:text-slate-300'
+          className={`rounded-md px-1.5 py-0.5 text-[11px] transition-colors ${
+            value === m ? 'bg-ghost-accent/15 text-ghost-accent' : 'text-ghost-muted hover:text-ghost-text'
           }`}
         >
           {m}m
@@ -54,25 +54,25 @@ export default function TrafficChart({ history, windowMinutes, onWindowChange })
 
   return (
     <div className="rounded-lg border border-ghost-line bg-ghost-panel px-4 py-2.5">
-      <div className="flex items-center gap-4 text-[11px]">
-        <span className="font-medium tracking-[0.14em] text-slate-500">TRAFFIC</span>
-        <span className="flex items-center gap-1.5 font-mono text-cyan-300">
-          <span className="h-2 w-2 rounded-full bg-cyan-400" />
+      <div className="flex items-center gap-4 text-[12px]">
+        <span className="font-medium text-ghost-muted">Traffic</span>
+        <span className="flex items-center gap-1.5 text-ghost-text2">
+          <span className="h-2 w-2 rounded-full" style={{ background: '#6e56cf' }} />
           ↓ {formatRate(currentDown)}
         </span>
-        <span className="flex items-center gap-1.5 font-mono text-violet-300">
-          <span className="h-2 w-2 rounded-full bg-violet-400" />
+        <span className="flex items-center gap-1.5 text-ghost-text2">
+          <span className="h-2 w-2 rounded-full" style={{ background: '#e5484d' }} />
           ↑ {formatRate(currentUp)}
         </span>
-        <span className="font-mono text-slate-600">peak {formatRate(max)}</span>
+        <span className="text-ghost-muted/50">peak {formatRate(max)}</span>
         <span className="ml-auto" />
         <WindowButtons value={windowMinutes} onChange={onWindowChange} />
       </div>
 
       <div className="relative mt-1.5 h-[72px]">
         {down.length < 2 ? (
-          <div className="absolute inset-0 flex items-center justify-center text-[11px] text-slate-600">
-            collecting samples…
+          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-ghost-muted">
+            Collecting samples…
           </div>
         ) : (
           <svg
@@ -91,30 +91,30 @@ export default function TrafficChart({ history, windowMinutes, onWindowChange })
             }}
             onMouseLeave={() => setHover(null)}
           >
-            <line x1="0" y1={HEIGHT / 2} x2={WIDTH} y2={HEIGHT / 2} stroke="#1e3654" strokeWidth="1" />
+            <line x1="0" y1={HEIGHT / 2} x2={WIDTH} y2={HEIGHT / 2} stroke="#2a2a2e" strokeWidth="1" />
             <path
               d={pathFor(down, xOf, yOf, true)}
-              fill="#22d3ee"
-              fillOpacity="0.12"
+              fill="#6e56cf"
+              fillOpacity="0.1"
               stroke="none"
             />
             <path
               d={pathFor(up, xOf, yOf, true)}
-              fill="#a78bfa"
-              fillOpacity="0.12"
+              fill="#e5484d"
+              fillOpacity="0.08"
               stroke="none"
             />
             <path
               d={pathFor(down, xOf, yOf, false)}
               fill="none"
-              stroke="#22d3ee"
+              stroke="#6e56cf"
               strokeWidth="1.5"
               vectorEffect="non-scaling-stroke"
             />
             <path
               d={pathFor(up, xOf, yOf, false)}
               fill="none"
-              stroke="#a78bfa"
+              stroke="#e5484d"
               strokeWidth="1.5"
               vectorEffect="non-scaling-stroke"
             />
@@ -124,7 +124,7 @@ export default function TrafficChart({ history, windowMinutes, onWindowChange })
                 y1="0"
                 x2={xOf(hover)}
                 y2={HEIGHT}
-                stroke="#334155"
+                stroke="#3a3a3e"
                 strokeWidth="1"
                 vectorEffect="non-scaling-stroke"
               />
@@ -133,7 +133,7 @@ export default function TrafficChart({ history, windowMinutes, onWindowChange })
         )}
         {hover && (
           <div
-            className="pointer-events-none absolute top-1 rounded border border-ghost-line bg-ghost-bg/95 px-2 py-1 font-mono text-[10px] text-slate-300"
+            className="pointer-events-none absolute top-1 rounded-md border border-ghost-line bg-ghost-bg/95 px-2 py-1 font-mono text-[11px] text-ghost-text2"
             style={{
               left: `${((hover.t - t0) / Math.max(t1 - t0, 1)) * 100}%`,
               transform: `translateX(${hover.t - t0 > (t1 - t0) / 2 ? '-105%' : '5%'})`,

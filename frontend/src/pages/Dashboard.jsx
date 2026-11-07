@@ -177,10 +177,10 @@ export default function Dashboard() {
         setDetailConn(null)
         setRightTab(id)
       }}
-      className={`border-b-2 px-3 py-2 text-[11px] font-semibold tracking-[0.14em] transition-colors ${
+      className={`border-b-2 px-3 py-2 text-[12px] font-medium transition-colors ${
         rightTab === id
           ? 'border-ghost-accent text-ghost-accent'
-          : 'border-transparent text-slate-500 hover:text-slate-300'
+          : 'border-transparent text-ghost-muted hover:text-ghost-text2'
       }`}
     >
       {label}
@@ -190,59 +190,59 @@ export default function Dashboard() {
   return (
     <div className="flex h-full flex-col">
       {/* header */}
-      <header className="flex items-center gap-4 border-b border-ghost-line bg-ghost-panel/80 px-4 py-3 backdrop-blur">
-        <div className="flex items-center gap-2.5">
-          <span className="text-lg leading-none text-ghost-accent">◈</span>
-          <h1 className="text-[15px] font-bold tracking-[0.22em] text-slate-100">GHOSTNET</h1>
+      <header className="flex items-center gap-3 border-b border-ghost-line bg-ghost-panel/80 px-4 py-2.5 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <span className="text-base leading-none text-ghost-accent">◈</span>
+          <h1 className="text-[14px] font-semibold text-ghost-text">GhostNet</h1>
         </div>
-        <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold tracking-widest text-emerald-300">
+
+        <span className="flex items-center gap-1.5 rounded-full border border-ghost-green/30 bg-ghost-green/8 px-2 py-0.5 text-[11px] font-medium text-ghost-green">
           <span
-            className={`h-1.5 w-1.5 rounded-full bg-emerald-400 ${connected ? 'live-dot' : ''}`}
-            style={connected ? undefined : { background: '#64748b', animation: 'none' }}
+            className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-ghost-green live-dot' : 'bg-ghost-muted'}`}
           />
-          {connected ? 'LIVE' : 'OFFLINE'}
+          {connected ? 'Live' : 'Offline'}
         </span>
 
-        <div className="ml-auto flex items-center gap-2 text-[11px]">
+        <div className="ml-auto flex items-center gap-2 text-[12px]">
           {status?.demo && (
-            <span className="rounded border border-violet-400/40 bg-violet-500/15 px-2 py-0.5 font-semibold tracking-wider text-violet-300">
-              DEMO DATA
+            <span className="rounded-md border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 font-medium text-violet-400/80">
+              Demo
             </span>
           )}
-          <span className="rounded bg-white/[0.05] px-2 py-0.5 font-mono text-slate-400">
-            src: {status?.source ?? '—'}
-            {status ? (status.elevated ? ' · full view' : ' · limited') : ''}
+          <span className="text-ghost-muted">
+            {status?.source ?? '—'}
+            {status ? (status.elevated ? ' · full' : ' · limited') : ''}
           </span>
           {alerts.length > 0 && (
             <button
               type="button"
               onClick={dismissAllAlerts}
-              className="rounded border border-amber-400/40 bg-amber-400/10 px-2.5 py-1 font-semibold tracking-wider text-amber-300 transition-colors hover:bg-amber-400/20"
+              className="rounded-md border border-amber-400/30 bg-amber-400/8 px-2 py-0.5 font-medium text-amber-400/80 transition-colors hover:bg-amber-400/15"
               title="New application → destination pairs. Click to clear."
             >
-              ⚑ {alerts.length} ALERT{alerts.length > 1 ? 'S' : ''}
+              {alerts.length} alert{alerts.length > 1 ? 's' : ''}
             </button>
           )}
           <button
             type="button"
             onClick={replay ? exitReplay : () => loadReplayWindow(replay?.window ?? 3600)}
-            className={`rounded border px-2.5 py-1 font-semibold tracking-wider transition-colors ${
+            className={`rounded-md border px-2 py-0.5 font-medium transition-colors ${
               replay
-                ? 'border-amber-400/50 bg-amber-400/10 text-amber-300'
-                : 'border-ghost-line text-slate-300 hover:border-amber-400/50 hover:text-amber-300'
+                ? 'border-amber-400/40 bg-amber-400/10 text-amber-400/80'
+                : 'border-ghost-line text-ghost-text2 hover:border-ghost-accent/40 hover:text-ghost-accent'
             }`}
             title="Scrub back through 24h of recorded connection events"
           >
-            {replay ? 'REPLAYING' : 'REPLAY'}
+            {replay ? 'Replaying' : 'Replay'}
           </button>
           <button
             type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="rounded border border-ghost-line px-2.5 py-1 font-semibold tracking-wider text-slate-300 transition-colors hover:border-ghost-accent/50 hover:text-ghost-accent disabled:opacity-50"
+            className="rounded-md border border-ghost-line px-2 py-0.5 font-medium text-ghost-text2 transition-colors hover:border-ghost-accent/40 hover:text-ghost-accent disabled:opacity-40"
             title="Download a printable report of the current state"
           >
-            {exporting ? 'BUILDING…' : 'EXPORT'}
+            {exporting ? 'Building…' : 'Export'}
           </button>
         </div>
       </header>
@@ -250,32 +250,32 @@ export default function Dashboard() {
       <PermissionBanner status={status} />
 
       {/* stats row */}
-      <div className="grid grid-cols-2 gap-3 px-4 pt-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 px-4 pt-3 lg:grid-cols-4">
         <StatsCard
-          label="DOWNLOAD"
+          label="Download"
           value={formatRate(viewStats.download_bps || 0)}
           sub={`total ${formatBytes(viewStats.total_recv || 0)}`}
           spark={downHistory}
-          accent="#22d3ee"
+          accent="#6e56cf"
         />
         <StatsCard
-          label="UPLOAD"
+          label="Upload"
           value={formatRate(viewStats.upload_bps || 0)}
           sub={`total ${formatBytes(viewStats.total_sent || 0)}`}
           spark={upHistory}
-          accent="#a78bfa"
+          accent="#3e63dd"
         />
         <StatsCard
-          label="CONNECTIONS"
+          label="Connections"
           value={viewStats.connections ?? 0}
           sub={`${viewStats.established ?? 0} established · ${viewStats.applications ?? 0} apps · ${viewStats.domains ?? 0} domains`}
-          accent="#34d399"
+          accent="#30a46c"
         />
         <StatsCard
-          label="REQUESTS"
+          label="Requests"
           value={(viewStats.requests ?? 0).toLocaleString()}
           sub={replay ? 'opens up to scrub position' : `session uptime ${formatUptime(status?.uptime)}`}
-          accent="#fbbf24"
+          accent="#e38c2d"
         />
       </div>
 
@@ -323,12 +323,12 @@ export default function Dashboard() {
       <div className="mt-3 flex min-h-0 flex-1 gap-3 px-4 pb-3">
         <div className="relative min-w-0 flex-1 overflow-hidden rounded-lg border border-ghost-line bg-ghost-panel">
           {selectedApp && (
-            <div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded border border-ghost-accent/40 bg-ghost-bg/90 px-2.5 py-1.5 text-[11px] text-ghost-accent">
-              <span>ghost mode: {selectedApp}</span>
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-2 rounded-md border border-ghost-accent/30 bg-ghost-bg/90 px-2.5 py-1.5 text-[12px] text-ghost-accent">
+              <span>Filtering: {selectedApp}</span>
               <button
                 type="button"
                 onClick={() => setSelectedApp(null)}
-                className="text-slate-500 transition-colors hover:text-slate-200"
+                className="text-ghost-muted transition-colors hover:text-ghost-text"
               >
                 ✕
               </button>
@@ -341,11 +341,11 @@ export default function Dashboard() {
           />
         </div>
 
-        <aside className="flex w-[330px] shrink-0 flex-col overflow-hidden rounded-lg border border-ghost-line bg-ghost-panel">
+        <aside className="flex w-[320px] shrink-0 flex-col overflow-hidden rounded-lg border border-ghost-line bg-ghost-panel">
           <div className="flex border-b border-ghost-line">
-            {tabButton('apps', 'APPS')}
-            {tabButton('domains', 'DOMAINS')}
-            {tabButton('conns', 'CONNS')}
+            {tabButton('apps', 'Apps')}
+            {tabButton('domains', 'Domains')}
+            {tabButton('conns', 'Conns')}
           </div>
           <div className="min-h-0 flex-1">
             {detailConn ? (
@@ -393,9 +393,9 @@ export default function Dashboard() {
       <AlertToasts alerts={alerts} onDismiss={dismissAlert} />
 
       {/* status bar */}
-      <footer className="flex items-center gap-4 border-t border-ghost-line bg-ghost-panel/60 px-4 py-1.5 font-mono text-[10px] text-slate-500">
+      <footer className="flex items-center gap-4 border-t border-ghost-line bg-ghost-panel/60 px-4 py-1.5 text-[11px] text-ghost-muted">
         {replay && (
-          <span className="text-amber-300">replay {formatClock(replay.at)}</span>
+          <span className="text-amber-400/70">replay {formatClock(replay.at)}</span>
         )}
         <span>uptime {formatUptime(status?.uptime)}</span>
         <span>requests {(viewStats.requests ?? 0).toLocaleString()}</span>
@@ -403,8 +403,8 @@ export default function Dashboard() {
         <span>bandwidth: {status?.bandwidth ?? '—'}</span>
         <span className="ml-auto">
           {connected
-            ? `ws connected${status?.ws_clients ? ` · ${status.ws_clients} clients` : ''}`
-            : 'ws reconnecting…'}
+            ? `connected${status?.ws_clients ? ` · ${status.ws_clients} clients` : ''}`
+            : 'reconnecting…'}
         </span>
       </footer>
     </div>

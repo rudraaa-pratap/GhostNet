@@ -2,7 +2,7 @@ import * as d3 from 'd3'
 import { useEffect, useRef } from 'react'
 import { appColor } from '../utils/colors'
 
-const DOMAIN_COLOR = '#7dd3fc'
+const DOMAIN_COLOR = '#8b8d98'
 
 function truncate(text, n = 26) {
   return text.length > n ? `${text.slice(0, n - 1)}…` : text
@@ -151,7 +151,7 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
 
     const setHighlight = (activeId) => {
       if (!activeId) {
-        linkLayer.selectAll('line').attr('stroke-opacity', 0.55)
+        linkLayer.selectAll('line').attr('stroke-opacity', 0.4)
         nodeLayer.selectAll('g.node').attr('opacity', 1)
         return
       }
@@ -164,11 +164,11 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
           active.add(s)
           active.add(t)
         }
-        return on ? 0.9 : 0.06
+        return on ? 0.8 : 0.05
       })
       nodeLayer
         .selectAll('g.node')
-        .attr('opacity', (d) => (active.has(d.id) ? 1 : 0.18))
+        .attr('opacity', (d) => (active.has(d.id) ? 1 : 0.15))
     }
 
     apiRef.current = { svg, root, linkLayer, nodeLayer, simulation, drag, setHighlight, width: () => width, height: () => height }
@@ -235,15 +235,15 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
       .enter()
       .append('line')
       .attr('stroke', (d) => d.color)
-      .attr('stroke-width', (d) => 1.2 + d.count * 0.5)
-      .attr('stroke-dasharray', '6 8')
+      .attr('stroke-width', (d) => 1 + d.count * 0.4)
+      .attr('stroke-dasharray', '4 6')
       .attr('stroke-opacity', 0)
       .attr('class', 'edge-flow')
     linkEnter
       .transition()
       .duration(400)
-      .attr('stroke-opacity', 0.55)
-    linkLayer.selectAll('line').attr('stroke-width', (d) => 1.2 + d.count * 0.5)
+      .attr('stroke-opacity', 0.4)
+    linkLayer.selectAll('line').attr('stroke-width', (d) => 1 + d.count * 0.4)
 
     // ---- nodes
     const nodeSel = nodeLayer
@@ -269,9 +269,9 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
       .append('circle')
       .attr('r', (d) => radiusOf(d))
       .attr('fill', (d) => d.color)
-      .attr('fill-opacity', 0.16)
+      .attr('fill-opacity', 0.12)
       .attr('stroke', (d) => d.color)
-      .attr('stroke-width', 1.6)
+      .attr('stroke-width', 1.4)
     nodeEnter
       .append('circle')
       .attr('r', (d) => Math.max(2.5, radiusOf(d) * 0.32))
@@ -281,11 +281,11 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
       .attr('y', (d) => radiusOf(d) + 13)
       .attr('text-anchor', 'middle')
       .attr('font-size', (d) => (d.kind === 'app' ? 11 : 9.5))
-      .attr('font-weight', (d) => (d.kind === 'app' ? 600 : 400))
-      .attr('font-family', 'ui-monospace, SF Mono, monospace')
-      .attr('fill', (d) => (d.kind === 'app' ? '#e2e8f0' : '#8fb3d0'))
+      .attr('font-weight', (d) => (d.kind === 'app' ? 500 : 400))
+      .attr('font-family', 'Inter, ui-sans-serif, system-ui, sans-serif')
+      .attr('fill', (d) => (d.kind === 'app' ? '#ededef' : '#706f78'))
       .attr('paint-order', 'stroke')
-      .attr('stroke', '#0f2038')
+      .attr('stroke', '#111113')
       .attr('stroke-width', 3)
       .text((d) => truncate(d.label))
     nodeEnter.append('title').text(
@@ -308,7 +308,7 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
     nodeLayer
       .selectAll('g.node')
       .select('circle')
-      .attr('stroke-width', (d) => (selected && d.id === `a:${selected}` ? 3.2 : 1.6))
+      .attr('stroke-width', (d) => (selected && d.id === `a:${selected}` ? 3 : 1.4))
 
     simulation.nodes(nodes)
     simulation.force('link').links(links)
@@ -322,19 +322,19 @@ export default function NetworkGraph({ connections, selected, onNodeClick }) {
       <div ref={containerRef} className="absolute inset-0" />
       {!hasRemote && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-          <div className="text-sm text-slate-500">No outbound connections yet</div>
-          <div className="text-xs text-slate-600">
-            Open a browser or wait for background apps to phone home
+          <div className="text-sm text-ghost-muted">No outbound connections yet</div>
+          <div className="text-[12px] text-ghost-muted/50">
+            Open a browser or wait for background apps to connect
           </div>
         </div>
       )}
-      <div className="pointer-events-none absolute bottom-3 left-3 flex gap-4 text-[10px] text-slate-500">
+      <div className="pointer-events-none absolute bottom-3 left-3 flex gap-4 text-[11px] text-ghost-muted">
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full border border-cyan-400 bg-cyan-400/20" />
+          <span className="h-2 w-2 rounded-full" style={{ background: '#6e56cf', opacity: 0.7 }} />
           application
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full border border-sky-300 bg-sky-300/20" />
+          <span className="h-2 w-2 rounded-full" style={{ background: '#8b8d98', opacity: 0.7 }} />
           domain / ip
         </span>
         <span className="hidden sm:inline">scroll to zoom · drag to pan · click app to focus</span>

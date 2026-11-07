@@ -38,9 +38,9 @@ export default function ReplayBar({
   const cursor = ((at - start) / span) * 100
 
   return (
-    <div className="rounded-lg border border-amber-400/30 bg-amber-500/[0.06] px-3 py-2">
-      <div className="flex flex-wrap items-center gap-2 text-[11px]">
-        <span className="font-semibold tracking-[0.16em] text-amber-300">REPLAY</span>
+    <div className="rounded-lg border border-ghost-accent/20 bg-ghost-accent/[0.04] px-3 py-2">
+      <div className="flex flex-wrap items-center gap-2 text-[12px]">
+        <span className="font-medium text-ghost-accent">Replay</span>
 
         <div className="flex gap-1">
           {REPLAY_WINDOWS.map((w) => (
@@ -49,8 +49,8 @@ export default function ReplayBar({
               type="button"
               disabled={loading}
               onClick={() => onWindow?.(w)}
-              className={`rounded px-1.5 py-0.5 font-mono transition-colors disabled:opacity-50 ${
-                windowSec === w ? 'bg-amber-400/20 text-amber-200' : 'text-slate-500 hover:text-slate-300'
+              className={`rounded-md px-1.5 py-0.5 transition-colors disabled:opacity-50 ${
+                windowSec === w ? 'bg-ghost-accent/15 text-ghost-accent' : 'text-ghost-muted hover:text-ghost-text'
               }`}
             >
               {label(w)}
@@ -61,38 +61,38 @@ export default function ReplayBar({
         <button
           type="button"
           onClick={onTogglePlay}
-          className="rounded border border-amber-400/40 px-2 py-0.5 font-mono text-amber-200 transition-colors hover:bg-amber-400/10"
+          className="rounded-md border border-ghost-accent/25 px-2 py-0.5 text-ghost-accent transition-colors hover:bg-ghost-accent/10"
         >
-          {playing ? '❚❚ pause' : '▶ play'}
+          {playing ? '❚❚ Pause' : '▶ Play'}
         </button>
 
         <button
           type="button"
           onClick={() => onSpeed?.(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
-          className="rounded border border-amber-400/40 px-2 py-0.5 font-mono text-amber-200 transition-colors hover:bg-amber-400/10"
+          className="rounded-md border border-ghost-accent/25 px-2 py-0.5 text-ghost-accent transition-colors hover:bg-ghost-accent/10"
           title="playback speed"
         >
           {speed}×
         </button>
 
-        <span className="font-mono text-slate-400">
-          {clock(at)} <span className="text-slate-600">/ {clock(now)}</span>
+        <span className="text-ghost-text2">
+          {clock(at)} <span className="text-ghost-muted">/ {clock(now)}</span>
         </span>
 
-        <span className="font-mono text-slate-500">
-          <span className="text-emerald-400">{counts.opens}</span> opens ·{' '}
-          <span className="text-rose-400">{counts.closes}</span> closes ·{' '}
-          <span className="text-slate-300">{counts.active}</span> open
+        <span className="text-ghost-muted">
+          <span style={{ color: '#30a46c' }}>{counts.opens}</span> opens ·{' '}
+          <span style={{ color: '#e5484d' }}>{counts.closes}</span> closes ·{' '}
+          <span className="text-ghost-text">{counts.active}</span> open
         </span>
 
         <span className="ml-auto flex items-center gap-2">
-          <span className="font-mono text-[10px] text-slate-600">{cursor.toFixed(1)}%</span>
+          <span className="text-[11px] text-ghost-muted">{cursor.toFixed(1)}%</span>
           <button
             type="button"
             onClick={onExit}
-            className="rounded bg-ghost-accent/15 px-2 py-0.5 font-semibold tracking-wider text-ghost-accent transition-colors hover:bg-ghost-accent/25"
+            className="rounded-md bg-ghost-accent/15 px-2 py-0.5 font-medium text-ghost-accent transition-colors hover:bg-ghost-accent/25"
           >
-            GO LIVE
+            Go live
           </button>
         </span>
       </div>
@@ -104,12 +104,12 @@ export default function ReplayBar({
         step={Math.max(1, span / 2000)}
         value={at}
         onChange={(e) => onChange?.(Number(e.target.value))}
-        className="mt-2 h-1 w-full cursor-pointer appearance-none rounded bg-slate-700 accent-amber-400"
+        className="mt-2 h-1 w-full cursor-pointer appearance-none rounded bg-ghost-line"
         aria-label="replay position"
       />
-      <div className="mt-0.5 flex justify-between font-mono text-[10px] text-slate-600">
+      <div className="mt-0.5 flex justify-between text-[11px] text-ghost-muted/50">
         <span>{clock(start)}</span>
-        <span>{loading ? 'loading events…' : `${events.length} events in window`}</span>
+        <span>{loading ? 'Loading events…' : `${events.length} events`}</span>
         <span>{clock(end)}</span>
       </div>
     </div>

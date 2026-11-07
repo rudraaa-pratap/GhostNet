@@ -19,8 +19,8 @@ function WindowButtons({ value, onChange }) {
           key={m}
           type="button"
           onClick={() => onChange(m)}
-          className={`rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors ${
-            value === m ? 'bg-ghost-accent/20 text-ghost-accent' : 'text-slate-500 hover:text-slate-300'
+          className={`rounded-md px-1.5 py-0.5 text-[11px] transition-colors ${
+            value === m ? 'bg-ghost-accent/15 text-ghost-accent' : 'text-ghost-muted hover:text-ghost-text'
           }`}
         >
           {label}
@@ -70,23 +70,23 @@ export default function Timeline({ events, windowMinutes, onWindowChange, refere
 
   return (
     <div className="rounded-lg border border-ghost-line bg-ghost-panel px-4 py-2.5">
-      <div className="flex items-center gap-4 text-[11px]">
-        <span className="font-medium tracking-[0.14em] text-slate-500">TIMELINE</span>
-        <span className="font-mono text-slate-400">
-          <span className="text-emerald-400">+{model.opens}</span>
+      <div className="flex items-center gap-4 text-[12px]">
+        <span className="font-medium text-ghost-muted">Timeline</span>
+        <span className="text-ghost-text2">
+          <span style={{ color: '#30a46c' }}>+{model.opens}</span>
           {' opens '}
-          <span className="text-rose-400">−{model.closes}</span>
+          <span style={{ color: '#e5484d' }}>−{model.closes}</span>
           {' closes'}
         </span>
-        <span className="font-mono text-slate-600">last {windowMinutes >= 60 ? '1h' : `${windowMinutes}m`}</span>
+        <span className="text-ghost-muted/50">last {windowMinutes >= 60 ? '1h' : `${windowMinutes}m`}</span>
         <span className="ml-auto" />
         <WindowButtons value={windowMinutes} onChange={onWindowChange} />
       </div>
 
       <div className="relative mt-1.5 h-[44px]">
         {!hasEvents ? (
-          <div className="absolute inset-0 flex items-center justify-center text-[11px] text-slate-600">
-            no connection events in this window
+          <div className="absolute inset-0 flex items-center justify-center text-[12px] text-ghost-muted">
+            No connection events in this window
           </div>
         ) : (
           <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} preserveAspectRatio="none" className="h-full w-full">
@@ -95,7 +95,7 @@ export default function Timeline({ events, windowMinutes, onWindowChange, refere
               y1={HEIGHT - 0.5}
               x2={WIDTH}
               y2={HEIGHT - 0.5}
-              stroke="#1e3654"
+              stroke="#2a2a2e"
               strokeWidth="1"
             />
             {model.buckets.map((b, i) => {
@@ -120,7 +120,8 @@ export default function Timeline({ events, windowMinutes, onWindowChange, refere
                         width={w}
                         height={Math.max(h - 0.8, 1)}
                         fill={appColor(process)}
-                        fillOpacity="0.8"
+                        fillOpacity="0.7"
+                        rx="1"
                       />
                     )
                   })}
@@ -131,7 +132,7 @@ export default function Timeline({ events, windowMinutes, onWindowChange, refere
         )}
       </div>
 
-      <div className="mt-1 flex justify-between font-mono text-[10px] text-slate-600">
+      <div className="mt-1 flex justify-between text-[11px] text-ghost-muted/50">
         <span>{clock(model.start)}</span>
         <span>{clock(model.now)}</span>
       </div>

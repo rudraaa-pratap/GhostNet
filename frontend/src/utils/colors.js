@@ -1,14 +1,15 @@
+// Muted, balanced palette — avoids the neon AI-dashboard look
 const PALETTE = [
-  '#22d3ee',
-  '#f472b6',
-  '#a78bfa',
-  '#34d399',
-  '#fbbf24',
-  '#60a5fa',
-  '#fb7185',
-  '#4ade80',
-  '#e879f9',
-  '#38bdf8',
+  '#6e56cf', // violet
+  '#e5484d', // red
+  '#30a46c', // green
+  '#e38c2d', // amber
+  '#3e63dd', // blue
+  '#ab4aba', // purple
+  '#0d9488', // teal
+  '#d6409f', // pink
+  '#e54666', // crimson
+  '#0090ff', // sky
 ]
 
 export function appColor(name) {
@@ -18,35 +19,35 @@ export function appColor(name) {
 }
 
 const CATEGORY_COLORS = {
-  Ads: '#fb7185',
-  Analytics: '#f472b6',
-  CDN: '#2dd4bf',
-  Google: '#38bdf8',
-  GitHub: '#94a3b8',
-  Microsoft: '#60a5fa',
-  Apple: '#a78bfa',
-  Amazon: '#fb923c',
-  Cloudflare: '#fbbf24',
-  Meta: '#818cf8',
-  'X / Twitter': '#38bdf8',
-  LinkedIn: '#38bdf8',
-  Reddit: '#f87171',
-  Discord: '#818cf8',
-  Slack: '#e879f9',
-  Zoom: '#22d3ee',
-  Spotify: '#4ade80',
-  Netflix: '#f87171',
-  Twitch: '#c084fc',
-  Developer: '#34d399',
-  Gaming: '#f472b6',
-  News: '#fbbf24',
-  'Search / Browser': '#38bdf8',
-  Storage: '#2dd4bf',
-  Payments: '#4ade80',
-  Pending: '#94a3b8',
-  IP: '#64748b',
-  Local: '#475569',
-  Other: '#64748b',
+  Ads: '#e5484d',
+  Analytics: '#d6409f',
+  CDN: '#0d9488',
+  Google: '#3e63dd',
+  GitHub: '#8b8d98',
+  Microsoft: '#3e63dd',
+  Apple: '#8b8d98',
+  Amazon: '#e38c2d',
+  Cloudflare: '#e38c2d',
+  Meta: '#3e63dd',
+  'X / Twitter': '#8b8d98',
+  LinkedIn: '#3e63dd',
+  Reddit: '#e5484d',
+  Discord: '#6e56cf',
+  Slack: '#ab4aba',
+  Zoom: '#3e63dd',
+  Spotify: '#30a46c',
+  Netflix: '#e5484d',
+  Twitch: '#6e56cf',
+  Developer: '#30a46c',
+  Gaming: '#d6409f',
+  News: '#e38c2d',
+  'Search / Browser': '#3e63dd',
+  Storage: '#0d9488',
+  Payments: '#30a46c',
+  Pending: '#706f78',
+  IP: '#62636c',
+  Local: '#50505a',
+  Other: '#62636c',
 }
 
 export function categoryColor(category) {
@@ -54,17 +55,17 @@ export function categoryColor(category) {
 }
 
 const STATUS_COLORS = {
-  ESTABLISHED: '#34d399',
-  SYN_SENT: '#fbbf24',
-  SYN_RECEIVED: '#fbbf24',
-  FIN_WAIT1: '#fbbf24',
-  FIN_WAIT2: '#fbbf24',
-  TIME_WAIT: '#64748b',
-  LISTEN: '#38bdf8',
-  CLOSE_WAIT: '#fb7185',
-  LAST_ACK: '#fb7185',
+  ESTABLISHED: '#30a46c',
+  SYN_SENT: '#e38c2d',
+  SYN_RECEIVED: '#e38c2d',
+  FIN_WAIT1: '#e38c2d',
+  FIN_WAIT2: '#e38c2d',
+  TIME_WAIT: '#62636c',
+  LISTEN: '#3e63dd',
+  CLOSE_WAIT: '#e5484d',
+  LAST_ACK: '#e5484d',
 }
 
 export function statusColor(status) {
-  return STATUS_COLORS[status] || '#64748b'
+  return STATUS_COLORS[status] || '#62636c'
 }
